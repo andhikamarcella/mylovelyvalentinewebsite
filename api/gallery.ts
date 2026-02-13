@@ -25,6 +25,13 @@ function folderFromPublicId(publicId: string) {
   return folderParts.join(" / ") || "Galeri";
 }
 
+function normalizeAssetUrl(resource: any) {
+  const raw = String(resource?.secure_url ?? resource?.url ?? "");
+  if (!raw) return "";
+  const https = raw.startsWith("http://") ? `https://${raw.slice("http://".length)}` : raw;
+  return encodeURI(https);
+}
+
 export default async function handler(request: Request) {
   if (request.method !== "GET") {
     return Response.json({ message: "Method not allowed" }, { status: 405 });
@@ -56,7 +63,7 @@ export default async function handler(request: Request) {
         const format = r?.format ? String(r.format) : undefined;
         const resourceType = String(r?.resource_type ?? "image");
         const kind: "image" | "video" = resourceType === "video" ? "video" : "image";
-        const assetUrl = String(r?.secure_url ?? r?.url ?? "");
+        const assetUrl = normalizeAssetUrl(r);
         if (!publicId || !assetUrl) return null;
 
         return {

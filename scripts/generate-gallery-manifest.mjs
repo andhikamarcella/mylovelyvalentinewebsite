@@ -43,6 +43,13 @@ function folderFromPublicId(publicId) {
   return folderParts.join(" / ") || "Galeri";
 }
 
+function normalizeAssetUrl(resource) {
+  const raw = String(resource?.secure_url ?? resource?.url ?? "");
+  if (!raw) return "";
+  const https = raw.startsWith("http://") ? `https://${raw.slice("http://".length)}` : raw;
+  return encodeURI(https);
+}
+
 async function listResources({ cloudName, apiKey, apiSecret, resourceType }) {
   const out = [];
   let nextCursor = null;
@@ -105,7 +112,7 @@ async function main() {
         const publicId = String(r?.public_id ?? "");
         const resourceType = String(r?.resource_type ?? "image");
         const kind = resourceType === "video" ? "video" : "image";
-        const url = String(r?.secure_url ?? r?.url ?? "");
+        const url = normalizeAssetUrl(r);
         if (!publicId || !url) return null;
         return {
           id: publicId,
