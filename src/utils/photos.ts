@@ -137,7 +137,11 @@ async function fetchFromCloudinary() {
     if (cursor) qs.set("cursor", cursor);
 
     const r = await fetch(`/api/gallery?${qs.toString()}`, { cache: "no-cache" });
-    if (!r.ok) throw new Error("Cloudinary gallery fetch failed");
+    if (!r.ok) {
+      if (r.status === 404) throw new Error("API /api/gallery tidak ditemukan");
+      if (r.status === 500) throw new Error("Server galeri error (cek CLOUDINARY_URL di Vercel)");
+      throw new Error("Cloudinary gallery fetch failed");
+    }
     const json = (await r.json()) as CloudinaryGalleryResponse;
 
     const items = Array.isArray(json.items) ? json.items : [];

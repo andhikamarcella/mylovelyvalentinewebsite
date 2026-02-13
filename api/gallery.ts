@@ -39,13 +39,16 @@ export default async function handler(req: any, res: any) {
 
   try {
     const max = Math.min(500, Math.max(1, Number(req.query.max ?? 400)));
-    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
 
-    let q = cloudinary.search.expression("folder:gallery*").sort_by("public_id", "asc").max_results(max);
-    if (cursor) q = q.next_cursor(cursor);
-    const result = await q.execute();
+    const [images, videos] = await Promise.all([
+      cloudinary.api.resources({ type: "upload", prefix: "gallery", max_results: max }),
+      cloudinary.api.resources({ type: "upload", prefix: "gallery", max_results: max, resource_type: "video" }),
+    ]);
 
-    const resources = Array.isArray(result?.resources) ? result.resources : [];
+    const resources = [
+      ...(Array.isArray(images?.resources) ? images.resources : []),
+      ...(Array.isArray(videos?.resources) ? videos.resources : []),
+    ];
 
     const items: GalleryItem[] = resources
       .map((r: any) => {
@@ -73,7 +76,7 @@ export default async function handler(req: any, res: any) {
 
     res.status(200).json({
       items,
-      nextCursor: result?.next_cursor ?? null,
+      nextCursor: null,
     });
   } catch (e: any) {
     res.status(500).json({ message: e?.message ?? "Gagal memuat galeri" });

@@ -6,8 +6,12 @@ export function getCloudinary() {
   if (!configured) {
     const url = process.env.CLOUDINARY_URL;
     if (url) {
+      const u = new URL(url);
       cloudinary.config({
-        cloudinary_url: url,
+        cloud_name: u.hostname,
+        api_key: decodeURIComponent(u.username),
+        api_secret: decodeURIComponent(u.password),
+        secure: true,
       });
     }
     configured = true;
@@ -15,4 +19,3 @@ export function getCloudinary() {
 
   return cloudinary;
 }
-

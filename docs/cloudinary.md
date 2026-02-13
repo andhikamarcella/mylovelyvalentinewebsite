@@ -7,6 +7,24 @@
 ## Upload Foto/Video dari Laptop
 Script upload akan mengambil file dari folder lokal dan mengupload ke Cloudinary dengan struktur folder yang sama.
 
+### 1) Set `CLOUDINARY_URL` di komputer kamu
+Jangan taruh `CLOUDINARY_URL` di file repo publik.
+
+PowerShell (Windows):
+```powershell
+$env:CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
+```
+
+### 2) Simulasi dulu (cek folder mapping)
+```bash
+npm run upload:gallery -- --root "D:\\path\\ke\\gallery" --folder gallery --dry
+```
+
+### 3) Upload beneran
+```bash
+npm run upload:gallery -- --root "D:\\path\\ke\\gallery" --folder gallery
+```
+
 Contoh:
 ```bash
 npm run upload:gallery -- --root "D:\\path\\ke\\gallery" --folder gallery
@@ -31,3 +49,4 @@ Query:
 2) Build command: `npm run build`
 3) Output directory: `dist`
 
+Tips: pastikan env variable tadi diset untuk environment **Production** juga (bukan cuma Preview).

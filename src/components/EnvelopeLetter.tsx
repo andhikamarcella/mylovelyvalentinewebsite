@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { playPaperOpenSfx } from "@/utils/sfx";
 
@@ -79,6 +80,15 @@ export default function EnvelopeLetter({
   const [showLetter, setShowLetter] = useState(false);
   const [page, setPage] = useState(0);
   const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    if (!showLetter) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showLetter]);
 
   const paragraphs = useMemo(
     () =>
@@ -165,57 +175,64 @@ export default function EnvelopeLetter({
         </div>
       </div>
 
-      {showLetter && (
-        <div className="fixed inset-0 z-50 bg-black/70 p-4" role="dialog" aria-modal="true">
-          <div className="mx-auto grid h-full max-w-3xl place-items-center">
-            <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--bg)]">
-              <div className="flex items-center justify-between gap-3 border-b border-white/10 p-3">
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-[var(--text)]">{LETTER.heading}</div>
-                  <div className="text-xs text-[var(--muted)]">Halaman {page + 1} / {totalPages}</div>
+      {typeof document !== "undefined" &&
+        showLetter &&
+        createPortal(
+          <div className="fixed inset-0 z-50 bg-black/70 p-4" role="dialog" aria-modal="true">
+            <div className="mx-auto flex h-full max-w-3xl items-center justify-center">
+              <div className="flex max-h-[92vh] w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--bg)]">
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 p-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-[var(--text)]">{LETTER.heading}</div>
+                    <div className="text-xs text-[var(--muted)]">Halaman {page + 1} / {totalPages}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowLetter(false)}
+                    className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 text-sm text-[var(--text)] transition hover:bg-white/10"
+                  >
+                    Tutup
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowLetter(false)}
-                  className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 text-sm text-[var(--text)] transition hover:bg-white/10"
-                >
-                  Tutup
-                </button>
-              </div>
 
-              <div className="relative p-4 sm:p-6">
-                <div
-                  className={cn(
-                    "relative mx-auto w-full overflow-hidden rounded-2xl border border-black/10 bg-white/90",
-                    "shadow-[0_18px_60px_rgba(0,0,0,0.55)]",
-                  )}
-                  style={{ backgroundImage: `url(${encodeURI("/stamp/letter.jpg")})`, backgroundSize: "cover", backgroundPosition: "center" }}
-                >
-                  <div className="pointer-events-none absolute inset-0 bg-white/60" />
+                <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
+                  <div
+                    className={cn(
+                      "relative mx-auto w-full overflow-hidden rounded-2xl border border-black/10 bg-white/90",
+                      "shadow-[0_18px_60px_rgba(0,0,0,0.55)]",
+                    )}
+                    style={{
+                      backgroundImage: `url(${encodeURI("/stamp/letter.jpg")})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-white/60" />
 
-                  <img
-                    src={encodeURI("/stamp/tallstamp.png")}
-                    alt="Stamp"
-                    className="pointer-events-none absolute -bottom-2 -left-2 z-0 h-24 w-auto -rotate-[10deg] opacity-75"
-                    loading="lazy"
-                  />
-                  <img
-                    src={encodeURI("/stamp/basicstamp.png")}
-                    alt="Stamp"
-                    className="pointer-events-none absolute -right-2 -top-2 z-0 h-14 w-14 rotate-[6deg] opacity-85"
-                    loading="lazy"
-                  />
+                    <img
+                      src={encodeURI("/stamp/tallstamp.png")}
+                      alt="Stamp"
+                      className="pointer-events-none absolute -bottom-2 -left-2 z-0 h-24 w-auto -rotate-[10deg] opacity-75"
+                      loading="lazy"
+                    />
+                    <img
+                      src={encodeURI("/stamp/basicstamp.png")}
+                      alt="Stamp"
+                      className="pointer-events-none absolute -right-2 -top-2 z-0 h-14 w-14 rotate-[6deg] opacity-85"
+                      loading="lazy"
+                    />
 
-                  <div className="relative z-10 max-h-[72vh] overflow-auto px-6 py-8 sm:px-12 sm:py-12">
-                    <div className="space-y-4 font-[var(--font-letter)] text-[15px] leading-relaxed text-[#111] sm:text-base">
-                      {pages[page]?.map((p, i) => (
-                        <p key={`${page}-${i}-${p}`}>{p}</p>
-                      ))}
+                    <div className="relative z-10 px-6 py-8 sm:px-12 sm:py-12">
+                      <div className="space-y-4 font-[var(--font-letter)] text-[15px] leading-relaxed text-[#111] sm:text-base">
+                        {pages[page]?.map((p, i) => (
+                          <p key={`${page}-${i}-${p}`}>{p}</p>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 border-t border-white/10 p-3">
                   <button
                     type="button"
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
@@ -251,9 +268,9 @@ export default function EnvelopeLetter({
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </section>
   );
 }
