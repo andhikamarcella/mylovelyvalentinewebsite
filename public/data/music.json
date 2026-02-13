@@ -1,0 +1,58 @@
+[
+  {
+    "id": "married-life",
+    "title": "Married Life",
+    "artist": "Michael Giacchino",
+    "src": "/music/Michael Giacchino - Married Life (192kbps).mp3",
+    "cover": "/album/up.png"
+  },
+  {
+    "id": "best-part",
+    "title": "Best Part",
+    "artist": "Daniel Caesar, H.E.R.",
+    "src": "/music/Daniel Caesar, H.E.R. - Best Part (feat. H.E.R.) (192kbps).mp3",
+    "cover": "/album/bestpart.png"
+  },
+  {
+    "id": "folded",
+    "title": "Folded",
+    "artist": "Kehlani",
+    "src": "/music/Kehlani - Folded (128kbps).mp3",
+    "cover": "/album/folded.png"
+  },
+  {
+    "id": "kota-ini",
+    "title": "kota ini tak sama tanpamu",
+    "artist": "Nadhif Basalamah",
+    "src": "/music/Nadhif Basalamah - kota ini tak sama tanpamu (192kbps).mp3",
+    "cover": "/album/kotaini.png"
+  },
+  {
+    "id": "so-easy",
+    "title": "So Easy (To Fall In Love)",
+    "artist": "Olivia Dean",
+    "src": "/music/Olivia Dean - So Easy (To Fall In Love) (192kbps).mp3",
+    "cover": "/album/soeasy.png"
+  },
+  {
+    "id": "i-thought-i-saw",
+    "title": "I Thought I Saw Your Face Today",
+    "artist": "She & Him",
+    "src": "/music/She _ Him - I Thought I Saw Your Face Today (192kbps).mp3",
+    "cover": "/album/isaw.png"
+  },
+  {
+    "id": "opalite",
+    "title": "Opalite",
+    "artist": "Taylor Swift",
+    "src": "/music/Taylor Swift - Opalite (192kbps).mp3",
+    "cover": "/album/opalite.png"
+  },
+  {
+    "id": "love",
+    "title": "love.",
+    "artist": "wave to earth",
+    "src": "/music/wave to earth, Daniel Kim - love. (192kbps).mp3",
+    "cover": "/album/love.png"
+  }
+]
