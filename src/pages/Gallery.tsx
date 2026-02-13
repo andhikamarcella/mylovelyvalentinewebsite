@@ -340,10 +340,9 @@ export default function Gallery() {
                               )}
                             </div>
 
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
-                            <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                            <div className="border-t border-white/10 p-3">
                               <div className="truncate text-sm font-semibold text-white">{p.title || "Kenangan"}</div>
-                              <div className="mt-1 max-h-10 overflow-hidden text-xs text-white/80">{p.description || p.folder}</div>
+                              <div className="mt-1 line-clamp-2 text-xs text-white/80">{p.description || p.folder}</div>
                             </div>
                           </button>
                         );
@@ -416,10 +415,10 @@ export default function Gallery() {
                                   />
                                 )}
                               </div>
-                              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
-                              <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+
+                              <div className="border-t border-white/10 p-3">
                                 <div className="truncate text-sm font-semibold text-white">{p.title}</div>
-                                <div className="mt-1 truncate text-xs text-white/80">{p.folder}</div>
+                                <div className="mt-1 line-clamp-2 text-xs text-white/80">{p.description || p.folder}</div>
                               </div>
                             </button>
                           ))}
