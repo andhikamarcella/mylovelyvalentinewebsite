@@ -91,7 +91,7 @@ export async function fetchPhotos() {
 
   if (source === "cloudinary" || import.meta.env.PROD) {
     try {
-      return await fetchFromCloudinary();
+      return await fetchFromCloudinaryStaticFirst();
     } catch {
       if (source === "cloudinary") throw new Error("Gagal memuat galeri dari Cloudinary");
     }
@@ -123,9 +123,63 @@ type CloudinaryGalleryResponse = {
     createdAt?: string;
   }>;
   nextCursor?: string | null;
+  error?: string;
 };
 
-async function fetchFromCloudinary() {
+type CloudinaryManifest = {
+  generatedAt?: string;
+  items?: CloudinaryGalleryResponse["items"];
+  error?: string;
+};
+
+async function fetchFromCloudinaryStaticFirst() {
+  try {
+    const r = await fetch(`/gallery-manifest.json?t=${Date.now()}`, { cache: "no-cache" });
+    const contentType = r.headers.get("content-type") ?? "";
+    if (r.ok && contentType.includes("application/json")) {
+      const json = (await r.json()) as CloudinaryManifest;
+      const items = Array.isArray(json.items) ? json.items : [];
+      if (items.length > 0) return sortPhotos(toPhotosFromCloudinaryItems(items));
+      if (typeof json.error === "string" && json.error) {
+        throw new Error(json.error);
+      }
+    }
+  } catch {
+    
+  }
+
+  return fetchFromCloudinaryApi();
+}
+
+function toPhotosFromCloudinaryItems(items: NonNullable<CloudinaryGalleryResponse["items"]>) {
+  const all: Photo[] = [];
+  items.forEach((it) => {
+    const filename = it.filename;
+    const description = SPECIAL_DESCRIPTIONS[filename] ?? "";
+    const title = defaultCaption(filename);
+    all.push({
+      id: it.id,
+      url: it.url,
+      kind: it.kind,
+      title,
+      description: normalizeDescription(description),
+      folder: it.folder,
+      filename,
+      createdAt: it.createdAt,
+    });
+  });
+
+  return all;
+}
+
+function sortPhotos(items: Photo[]) {
+  return items.sort((a, b) => {
+    if (a.folder !== b.folder) return a.folder.localeCompare(b.folder);
+    return a.filename.localeCompare(b.filename);
+  });
+}
+
+async function fetchFromCloudinaryApi() {
   const all: Photo[] = [];
   let cursor: string | null | undefined = undefined;
   let guard = 0;
@@ -160,32 +214,14 @@ async function fetchFromCloudinary() {
     }
 
     const json = (await r.json()) as CloudinaryGalleryResponse;
-
     const items = Array.isArray(json.items) ? json.items : [];
-    items.forEach((it) => {
-      const filename = it.filename;
-      const description = SPECIAL_DESCRIPTIONS[filename] ?? "";
-      const title = defaultCaption(filename);
-      all.push({
-        id: it.id,
-        url: it.url,
-        kind: it.kind,
-        title,
-        description: normalizeDescription(description),
-        folder: it.folder,
-        filename,
-        createdAt: it.createdAt,
-      });
-    });
+    all.push(...toPhotosFromCloudinaryItems(items));
 
     cursor = typeof json.nextCursor === "string" ? json.nextCursor : null;
     if (!cursor) break;
   }
 
-  return all.sort((a, b) => {
-    if (a.folder !== b.folder) return a.folder.localeCompare(b.folder);
-    return a.filename.localeCompare(b.filename);
-  });
+  return sortPhotos(all);
 }
 
 function toPhotoFromPath(p: string): Photo {
