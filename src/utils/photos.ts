@@ -114,11 +114,15 @@ export async function fetchPhotos() {
 }
 
 async function fetchFromLocal() {
-  const modules = import.meta.glob("/gallery/**/*.{jpg,jpeg,JPEG,JPG,png,PNG,mp4,MP4}");
-  const entries = Object.keys(modules);
+  const modules = import.meta.glob("/gallery/**/*.{jpg,jpeg,JPEG,JPG,png,PNG,mp4,MP4}", {
+    eager: true,
+    as: "url",
+  }) as Record<string, string>;
+
+  const entries = Object.entries(modules);
 
   return entries
-    .map((p) => toPhotoFromPath(p))
+    .map(([path, url]) => toPhotoFromLocal(path, url))
     .sort((a, b) => {
       if (a.folder !== b.folder) return a.folder.localeCompare(b.folder);
       return a.filename.localeCompare(b.filename);
@@ -237,17 +241,17 @@ async function fetchFromCloudinaryApi() {
   return sortPhotos(all);
 }
 
-function toPhotoFromPath(p: string): Photo {
-  const filename = decodeURIComponent(p.split("/").pop() ?? "");
+function toPhotoFromLocal(path: string, url: string): Photo {
+  const filename = decodeURIComponent(path.split("/").pop() ?? "");
   const description = descriptionForFilename(filename);
   const title = defaultCaption(filename);
   return {
-    id: p,
-    url: p,
+    id: path,
+    url,
     kind: inferKind(filename),
     title,
     description: normalizeDescription(description),
-    folder: folderFromPath(p),
+    folder: folderFromPath(path),
     filename,
   };
 }
