@@ -176,7 +176,7 @@ function toPhotosFromCloudinaryItems(items: NonNullable<CloudinaryGalleryRespons
     const title = defaultCaption(filename);
     all.push({
       id: it.id,
-      url: it.url,
+      url: normalizeCloudinaryUrl(it.url),
       kind: it.kind,
       title,
       description: normalizeDescription(description),
@@ -187,6 +187,42 @@ function toPhotosFromCloudinaryItems(items: NonNullable<CloudinaryGalleryRespons
   });
 
   return all;
+}
+
+function safeDecodeURIComponent(s: string) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+function normalizeCloudinaryUrl(raw: string) {
+  if (!raw) return raw;
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return raw;
+  }
+
+  if (!u.hostname.endsWith("res.cloudinary.com")) return raw;
+
+  const parts = u.pathname.split("/").filter(Boolean);
+  const uploadIdx = parts.indexOf("upload");
+  if (uploadIdx < 0) return raw;
+
+  const afterUploadIdx = uploadIdx + 1;
+  const hasVersion = /^v\d+$/.test(parts[afterUploadIdx] ?? "");
+  const publicStartIdx = hasVersion ? afterUploadIdx + 1 : afterUploadIdx;
+  if (publicStartIdx >= parts.length) return raw;
+
+  const encoded = parts.slice(0, publicStartIdx).concat(
+    parts.slice(publicStartIdx).map((seg) => encodeURIComponent(safeDecodeURIComponent(seg))),
+  );
+
+  u.pathname = `/${encoded.join("/")}`;
+  return u.toString();
 }
 
 function sortPhotos(items: Photo[]) {
