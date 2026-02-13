@@ -46,7 +46,7 @@ export default function PhotoLightbox({
               className="max-h-[72vh] w-full bg-black/30 object-contain"
             />
           ) : (
-            <img src={encodeURI(p.url)} alt={p.description || p.title} className="max-h-[72vh] w-full object-contain" />
+            <img src={encodeURI(p.url)} alt="" className="max-h-[72vh] w-full object-contain" />
           )}
 
           <button

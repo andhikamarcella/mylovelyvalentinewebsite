@@ -226,7 +226,7 @@ export default function Gallery() {
                           <div className="aspect-[4/3] overflow-hidden">
                             <img
                               src={encodeURI(p.url)}
-                              alt={p.description || p.title}
+                              alt=""
                               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
                               loading="lazy"
                             />
@@ -333,7 +333,7 @@ export default function Gallery() {
                               ) : (
                                 <img
                                   src={encodeURI(p.url)}
-                                  alt={p.description || p.title}
+                                  alt=""
                                   className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
                                   loading="lazy"
                                 />
@@ -409,7 +409,7 @@ export default function Gallery() {
                                 ) : (
                                   <img
                                     src={encodeURI(p.url)}
-                                    alt={p.description || p.title}
+                                    alt=""
                                     className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
                                     loading="lazy"
                                   />

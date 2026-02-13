@@ -151,7 +151,7 @@ export default function Secret() {
                         <img
                           key={p.id}
                           src={encodeURI(p.url)}
-                          alt={p.description || p.title}
+                          alt=""
                           className="aspect-square w-full rounded-xl border border-white/10 object-cover"
                           loading="lazy"
                         />
