@@ -22,13 +22,21 @@ function parseCloudinaryUrl(raw) {
   }
 }
 
-function filenameFromPublicId(publicId, format) {
-  const last = (publicId || "").split("/").pop() || publicId;
-  return format ? `${last}.${format}` : last;
+function filenameFromResource(resource) {
+  const publicId = String(resource?.public_id ?? "");
+  const format = resource?.format ? String(resource.format) : undefined;
+  const original = resource?.original_filename ? String(resource.original_filename) : "";
+
+  const base = original || ((publicId || "").split("/").pop() || publicId);
+  const decodedBase = safeDecode(base);
+  return format ? `${decodedBase}.${format}` : decodedBase;
 }
 
 function folderFromPublicId(publicId) {
-  const parts = String(publicId || "").split("/").filter(Boolean);
+  const parts = String(publicId || "")
+    .split("/")
+    .filter(Boolean)
+    .map((p) => safeDecode(p));
   const galleryIndex = parts.indexOf("gallery");
   const sub = galleryIndex >= 0 ? parts.slice(galleryIndex + 1) : parts;
   const folderParts = sub.slice(0, Math.max(0, sub.length - 1));
@@ -95,7 +103,6 @@ async function main() {
     const items = resources
       .map((r) => {
         const publicId = String(r?.public_id ?? "");
-        const format = r?.format ? String(r.format) : undefined;
         const resourceType = String(r?.resource_type ?? "image");
         const kind = resourceType === "video" ? "video" : "image";
         const url = String(r?.secure_url ?? r?.url ?? "");
@@ -106,7 +113,7 @@ async function main() {
           url,
           kind,
           folder: folderFromPublicId(publicId),
-          filename: filenameFromPublicId(publicId, format),
+          filename: filenameFromResource(r),
           createdAt: r?.created_at ? String(r.created_at) : undefined,
           width: typeof r?.width === "number" ? r.width : undefined,
           height: typeof r?.height === "number" ? r.height : undefined,
@@ -135,4 +142,3 @@ async function main() {
 }
 
 await main();
-

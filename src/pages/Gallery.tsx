@@ -78,8 +78,19 @@ export default function Gallery() {
   }, [filtered, page]);
 
   const highlights = useMemo(() => {
-    const want = new Set(["peyukan.jpg", "IMG_2503.JPEG", "menyender sama kamu.JPEG"]);
-    return photos.filter((p) => p.kind === "image" && want.has(p.filename)).slice(0, 3);
+    const want = new Set(["peyukan.jpg", "img_2503.jpeg", "menyender sama kamu.jpeg"].map((s) => s.toLowerCase()));
+    const byName = photos.filter((p) => p.kind === "image" && want.has(p.filename.toLowerCase()));
+    const byCaption = photos.filter((p) => p.kind === "image" && p.description.trim().length > 0);
+
+    const out: Photo[] = [];
+    const seen = new Set<string>();
+    [...byName, ...byCaption].forEach((p) => {
+      if (seen.has(p.id)) return;
+      seen.add(p.id);
+      out.push(p);
+    });
+
+    return out.slice(0, 6);
   }, [photos]);
 
   const timelineGroups = useMemo(() => {

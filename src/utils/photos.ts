@@ -58,6 +58,10 @@ const SPECIAL_DESCRIPTIONS: Record<string, string> = {
   "omoooo.JPEG": "yucukkk bangett paha kita kan sayang ggemess banget kita berdua omoooo"
 };
 
+const SPECIAL_DESCRIPTIONS_NORM: Record<string, string> = Object.fromEntries(
+  Object.entries(SPECIAL_DESCRIPTIONS).map(([k, v]) => [k.toLowerCase(), v]),
+);
+
 function stripExtension(filename: string) {
   const idx = filename.lastIndexOf(".");
   return idx > 0 ? filename.slice(0, idx) : filename;
@@ -155,7 +159,7 @@ function toPhotosFromCloudinaryItems(items: NonNullable<CloudinaryGalleryRespons
   const all: Photo[] = [];
   items.forEach((it) => {
     const filename = it.filename;
-    const description = SPECIAL_DESCRIPTIONS[filename] ?? "";
+    const description = SPECIAL_DESCRIPTIONS_NORM[filename.toLowerCase()] ?? "";
     const title = defaultCaption(filename);
     all.push({
       id: it.id,
@@ -226,7 +230,7 @@ async function fetchFromCloudinaryApi() {
 
 function toPhotoFromPath(p: string): Photo {
   const filename = decodeURIComponent(p.split("/").pop() ?? "");
-  const description = SPECIAL_DESCRIPTIONS[filename] ?? "";
+  const description = SPECIAL_DESCRIPTIONS_NORM[filename.toLowerCase()] ?? "";
   const title = defaultCaption(filename);
   return {
     id: p,
