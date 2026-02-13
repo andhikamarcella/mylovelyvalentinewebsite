@@ -137,11 +137,28 @@ async function fetchFromCloudinary() {
     if (cursor) qs.set("cursor", cursor);
 
     const r = await fetch(`/api/gallery?${qs.toString()}`, { cache: "no-cache" });
+    const contentType = r.headers.get("content-type") ?? "";
+
     if (!r.ok) {
-      if (r.status === 404) throw new Error("API /api/gallery tidak ditemukan");
-      if (r.status === 500) throw new Error("Server galeri error (cek CLOUDINARY_URL di Vercel)");
-      throw new Error("Cloudinary gallery fetch failed");
+      let serverMsg = "";
+      if (contentType.includes("application/json")) {
+        try {
+          const err = (await r.json()) as any;
+          serverMsg = typeof err?.message === "string" ? err.message : "";
+        } catch {
+          serverMsg = "";
+        }
+      }
+
+      if (r.status === 404) throw new Error("API /api/gallery tidak ditemukan (cek deploy Vercel)");
+      if (r.status === 500) throw new Error(serverMsg || "Server galeri error (cek CLOUDINARY_URL di Vercel)");
+      throw new Error(serverMsg || `Gagal memuat galeri (HTTP ${r.status})`);
     }
+
+    if (!contentType.includes("application/json")) {
+      throw new Error("/api/gallery tidak mengembalikan JSON (kemungkinan /api ter-rewrite ke index.html)");
+    }
+
     const json = (await r.json()) as CloudinaryGalleryResponse;
 
     const items = Array.isArray(json.items) ? json.items : [];
