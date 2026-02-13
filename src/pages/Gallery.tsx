@@ -231,8 +231,8 @@ export default function Gallery() {
                               loading="lazy"
                             />
                           </div>
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent opacity-0 transition group-hover:opacity-100" />
-                          <div className="pointer-events-none absolute bottom-3 left-3 right-3 text-xs text-white/90 opacity-0 transition group-hover:opacity-100">
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
+                          <div className="pointer-events-none absolute bottom-3 left-3 right-3 text-xs text-white/90 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                             {p.description || p.title}
                           </div>
                         </button>
@@ -340,8 +340,8 @@ export default function Gallery() {
                               )}
                             </div>
 
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
-                            <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 opacity-0 transition group-hover:opacity-100">
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
+                            <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                               <div className="truncate text-sm font-semibold text-white">{p.title || "Kenangan"}</div>
                               <div className="mt-1 max-h-10 overflow-hidden text-xs text-white/80">{p.description || p.folder}</div>
                             </div>
@@ -416,8 +416,8 @@ export default function Gallery() {
                                   />
                                 )}
                               </div>
-                              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
-                              <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 opacity-0 transition group-hover:opacity-100">
+                              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
+                              <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                                 <div className="truncate text-sm font-semibold text-white">{p.title}</div>
                                 <div className="mt-1 truncate text-xs text-white/80">{p.folder}</div>
                               </div>
