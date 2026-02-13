@@ -43,11 +43,27 @@ function folderFromPublicId(publicId) {
   return folderParts.join(" / ") || "Galeri";
 }
 
-function normalizeAssetUrl(resource) {
-  const raw = String(resource?.secure_url ?? resource?.url ?? "");
-  if (!raw) return "";
-  const https = raw.startsWith("http://") ? `https://${raw.slice("http://".length)}` : raw;
-  return encodeURI(https);
+function encodePublicId(publicId) {
+  return String(publicId)
+    .split("/")
+    .filter(Boolean)
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+}
+
+function buildDeliveryUrl({ cloudName, resource }) {
+  const publicId = String(resource?.public_id ?? "");
+  const resourceType = String(resource?.resource_type ?? "image");
+  const version = resource?.version;
+  const format = resource?.format ? String(resource.format) : "";
+
+  if (!cloudName || !publicId) return "";
+
+  let path = encodePublicId(publicId);
+  if (format && !path.toLowerCase().endsWith(`.${format.toLowerCase()}`)) path += `.${format}`;
+
+  const v = typeof version === "number" ? `/v${version}` : "";
+  return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload${v}/${path}`;
 }
 
 async function listResources({ cloudName, apiKey, apiSecret, resourceType }) {
@@ -112,7 +128,7 @@ async function main() {
         const publicId = String(r?.public_id ?? "");
         const resourceType = String(r?.resource_type ?? "image");
         const kind = resourceType === "video" ? "video" : "image";
-        const url = normalizeAssetUrl(r);
+        const url = buildDeliveryUrl({ cloudName: parsed.cloudName, resource: r });
         if (!publicId || !url) return null;
         return {
           id: publicId,

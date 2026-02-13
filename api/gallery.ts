@@ -26,10 +26,33 @@ function folderFromPublicId(publicId: string) {
 }
 
 function normalizeAssetUrl(resource: any) {
-  const raw = String(resource?.secure_url ?? resource?.url ?? "");
-  if (!raw) return "";
-  const https = raw.startsWith("http://") ? `https://${raw.slice("http://".length)}` : raw;
-  return encodeURI(https);
+  const rawCloudinaryUrl = process.env.CLOUDINARY_URL;
+  let cloudName = "";
+  if (rawCloudinaryUrl) {
+    try {
+      cloudName = new URL(rawCloudinaryUrl).hostname;
+    } catch {
+      cloudName = "";
+    }
+  }
+
+  const publicId = String(resource?.public_id ?? "");
+  const resourceType = String(resource?.resource_type ?? "image");
+  const version = resource?.version;
+  const format = resource?.format ? String(resource.format) : "";
+
+  if (!cloudName || !publicId) return String(resource?.secure_url ?? resource?.url ?? "");
+
+  const encodedPublicId = publicId
+    .split("/")
+    .filter(Boolean)
+    .map((seg: string) => encodeURIComponent(seg))
+    .join("/");
+
+  let path = encodedPublicId;
+  if (format && !path.toLowerCase().endsWith(`.${format.toLowerCase()}`)) path += `.${format}`;
+  const v = typeof version === "number" ? `/v${version}` : "";
+  return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload${v}/${path}`;
 }
 
 export default async function handler(request: Request) {
