@@ -43,16 +43,19 @@ export default function Gallery() {
   }, []);
 
   const folders = useMemo(() => {
-    const map = new Map<string, { count: number; thumb?: string }>();
+    const map = new Map<string, { count: number; thumbUrl?: string; thumbFilename?: string }>();
     photos.forEach((p) => {
       const current = map.get(p.folder) ?? { count: 0 };
       current.count += 1;
-      if (!current.thumb && p.kind === "image") current.thumb = p.url;
+      if (!current.thumbUrl && p.kind === "image") {
+        current.thumbUrl = p.url;
+        current.thumbFilename = p.filename;
+      }
       map.set(p.folder, current);
     });
 
     return Array.from(map.entries())
-      .map(([name, v]) => ({ name, count: v.count, thumb: v.thumb }))
+      .map(([name, v]) => ({ name, count: v.count, thumbUrl: v.thumbUrl, thumbFilename: v.thumbFilename }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [photos]);
 
@@ -223,9 +226,14 @@ export default function Gallery() {
                         folder === f.name && "ring-2 ring-[color:var(--accent)]",
                       )}
                     >
-                      {f.thumb ? (
+                      {f.thumbUrl ? (
                         <img
-                          src={encodeURI(f.thumb)}
+                          src={encodeURI(f.thumbUrl)}
+                          data-fallback={(() => {
+                            const fallback = f.thumbFilename ? localUrlForFilename(f.thumbFilename) : undefined;
+                            return fallback ? encodeURI(fallback) : undefined;
+                          })()}
+                          onError={onImageError}
                           alt=""
                           className="h-10 w-10 rounded-lg border border-white/10 object-cover"
                           loading="lazy"
