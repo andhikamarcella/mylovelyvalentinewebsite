@@ -29,7 +29,11 @@ function filenameFromResource(resource) {
 
   const base = original || ((publicId || "").split("/").pop() || publicId);
   const decodedBase = safeDecode(base);
-  return format ? `${decodedBase}.${format}` : decodedBase;
+  const raw = format ? `${decodedBase}.${format}` : decodedBase;
+  const m = raw.match(/^(img)_([0-9]+)(\.[a-z0-9]+)?$/i);
+  if (!m) return raw;
+  const ext = m[3] ?? "";
+  return `IMG_${m[2]}${ext}`;
 }
 
 function folderFromPublicId(publicId) {
@@ -40,7 +44,40 @@ function folderFromPublicId(publicId) {
   const galleryIndex = parts.indexOf("gallery");
   const sub = galleryIndex >= 0 ? parts.slice(galleryIndex + 1) : parts;
   const folderParts = sub.slice(0, Math.max(0, sub.length - 1));
-  return folderParts.join(" / ") || "Galeri";
+
+  const normalizeSeg = (seg) => {
+    const s = String(seg || "").toLowerCase();
+    const map = {
+      "(spesial) peyukkan": "(SPESIAL) PEYUKKAN",
+      "spesial peyukkan": "(SPESIAL) PEYUKKAN",
+      "spesial_peyukan": "(SPESIAL) PEYUKKAN",
+      "spesial-peyukan": "(SPESIAL) PEYUKKAN",
+      "first-date": "First date",
+      foodies: "Foodies",
+      gacoan: "Gacoan",
+      galeri: "Galeri",
+      hotel: "Hotel",
+      "jalan-berdua": "Jalan Berdua",
+      "kereta-berangkat": "Kereta berangkat",
+      "kereta-pulang": "Kereta pulang",
+      lapangan: "Lapangan",
+      "pasar-malam": "Pasar malam",
+      rumah: "Rumah",
+      santoso: "Santoso",
+      "wonderland-pemalang": "wonderland pemalang",
+      yogya: "yogya",
+    };
+    if (map[s]) return map[s];
+    const words = s
+      .replace(/[-_]+/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (words.length === 0) return String(seg || "");
+    return words.map((w) => w.slice(0, 1).toUpperCase() + w.slice(1)).join(" ");
+  };
+
+  return folderParts.map(normalizeSeg).join(" / ") || "Galeri";
 }
 
 function encodePublicId(publicId) {

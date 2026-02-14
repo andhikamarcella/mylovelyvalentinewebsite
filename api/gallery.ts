@@ -12,9 +12,48 @@ type GalleryItem = {
   height?: number;
 };
 
+function normalizeDisplayFilename(name: string) {
+  const base = String(name || "");
+  const m = base.match(/^(img)_([0-9]+)(\.[a-z0-9]+)?$/i);
+  if (!m) return base;
+  const ext = m[3] ?? "";
+  return `IMG_${m[2]}${ext}`;
+}
+
 function filenameFromPublicId(publicId: string, format?: string) {
   const last = publicId.split("/").pop() ?? publicId;
-  return format ? `${last}.${format}` : last;
+  const raw = format ? `${last}.${format}` : last;
+  return normalizeDisplayFilename(raw);
+}
+
+function normalizeFolderSegment(seg: string) {
+  const s = String(seg || "").toLowerCase();
+  const map: Record<string, string> = {
+    "(spesial) peyukkan": "(SPESIAL) PEYUKKAN",
+    "spesial peyukkan": "(SPESIAL) PEYUKKAN",
+    "spesial_peyukan": "(SPESIAL) PEYUKKAN",
+    "spesial-peyukan": "(SPESIAL) PEYUKKAN",
+    "first-date": "First date",
+    "foodies": "Foodies",
+    "gacoan": "Gacoan",
+    "galeri": "Galeri",
+    "hotel": "Hotel",
+    "jalan-berdua": "Jalan Berdua",
+    "kereta-berangkat": "Kereta berangkat",
+    "kereta-pulang": "Kereta pulang",
+    "lapangan": "Lapangan",
+    "pasar-malam": "Pasar malam",
+    "rumah": "Rumah",
+    "santoso": "Santoso",
+    "wonderland-pemalang": "wonderland pemalang",
+    "yogya": "yogya",
+  };
+
+  if (map[s]) return map[s];
+
+  const words = s.replace(/[-_]+/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return String(seg || "");
+  return words.map((w) => w.slice(0, 1).toUpperCase() + w.slice(1)).join(" ");
 }
 
 function folderFromPublicId(publicId: string) {
@@ -22,7 +61,7 @@ function folderFromPublicId(publicId: string) {
   const galleryIndex = parts.indexOf("gallery");
   const sub = galleryIndex >= 0 ? parts.slice(galleryIndex + 1) : parts;
   const folderParts = sub.slice(0, Math.max(0, sub.length - 1));
-  return folderParts.join(" / ") || "Galeri";
+  return folderParts.map(normalizeFolderSegment).join(" / ") || "Galeri";
 }
 
 function normalizeAssetUrl(resource: any) {
