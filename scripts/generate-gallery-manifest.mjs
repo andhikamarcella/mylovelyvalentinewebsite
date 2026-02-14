@@ -44,11 +44,31 @@ function folderFromPublicId(publicId) {
 }
 
 function encodePublicId(publicId) {
-  return String(publicId)
-    .split("/")
-    .filter(Boolean)
-    .map((seg) => encodeURIComponent(seg))
-    .join("/");
+  const encodeSegment = (seg) =>
+    encodeURIComponent(seg).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+
+  return String(publicId).split("/").filter(Boolean).map(encodeSegment).join("/");
+}
+
+function rewriteFolderSegment(seg) {
+  const decoded = safeDecode(String(seg || ""));
+  const norm = decoded.toLowerCase().replace(/\s+/g, " ").trim();
+  if (norm === "(spesial) peyukkan" || norm === "spesial peyukkan") return "spesial_peyukan";
+  return decoded;
+}
+
+function rewritePublicId(publicId) {
+  const parts = String(publicId || "").split("/").filter(Boolean);
+  const galleryIndex = parts.indexOf("gallery");
+  if (galleryIndex < 0) return publicId;
+
+  const head = parts.slice(0, galleryIndex + 1);
+  const rest = parts.slice(galleryIndex + 1);
+  if (rest.length === 0) return publicId;
+
+  const leaf = rest[rest.length - 1];
+  const folders = rest.slice(0, -1).map(rewriteFolderSegment);
+  return [...head, ...folders, leaf].filter(Boolean).join("/");
 }
 
 function buildDeliveryUrl({ cloudName, resource }) {
@@ -125,11 +145,12 @@ async function main() {
     const resources = [...images, ...videos];
     const items = resources
       .map((r) => {
-        const publicId = String(r?.public_id ?? "");
+        const sourcePublicId = String(r?.public_id ?? "");
+        const publicId = rewritePublicId(sourcePublicId);
         const resourceType = String(r?.resource_type ?? "image");
         const kind = resourceType === "video" ? "video" : "image";
         const url = buildDeliveryUrl({ cloudName: parsed.cloudName, resource: r });
-        if (!publicId || !url) return null;
+        if (!sourcePublicId || !publicId || !url) return null;
         return {
           id: publicId,
           publicId,

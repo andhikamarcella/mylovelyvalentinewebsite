@@ -43,16 +43,36 @@ function normalizeAssetUrl(resource: any) {
 
   if (!cloudName || !publicId) return String(resource?.secure_url ?? resource?.url ?? "");
 
-  const encodedPublicId = publicId
-    .split("/")
-    .filter(Boolean)
-    .map((seg: string) => encodeURIComponent(seg))
-    .join("/");
+  const encodeSegment = (seg: string) =>
+    encodeURIComponent(seg).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+
+  const encodedPublicId = publicId.split("/").filter(Boolean).map(encodeSegment).join("/");
 
   let path = encodedPublicId;
   if (format && !path.toLowerCase().endsWith(`.${format.toLowerCase()}`)) path += `.${format}`;
   const v = typeof version === "number" ? `/v${version}` : "";
   return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload${v}/${path}`;
+}
+
+function rewriteFolderSegment(seg: string) {
+  const decoded = String(seg || "");
+  const norm = decoded.toLowerCase().replace(/\s+/g, " ").trim();
+  if (norm === "(spesial) peyukkan" || norm === "spesial peyukkan") return "spesial_peyukan";
+  return decoded;
+}
+
+function rewritePublicId(publicId: string) {
+  const parts = String(publicId || "").split("/").filter(Boolean);
+  const galleryIndex = parts.indexOf("gallery");
+  if (galleryIndex < 0) return publicId;
+
+  const head = parts.slice(0, galleryIndex + 1);
+  const rest = parts.slice(galleryIndex + 1);
+  if (rest.length === 0) return publicId;
+
+  const leaf = rest[rest.length - 1];
+  const folders = rest.slice(0, -1).map(rewriteFolderSegment);
+  return [...head, ...folders, leaf].filter(Boolean).join("/");
 }
 
 export default async function handler(request: Request) {
@@ -82,12 +102,13 @@ export default async function handler(request: Request) {
 
     const items: GalleryItem[] = resources
       .map((r: any) => {
-        const publicId = String(r?.public_id ?? "");
+        const sourcePublicId = String(r?.public_id ?? "");
+        const publicId = rewritePublicId(sourcePublicId);
         const format = r?.format ? String(r.format) : undefined;
         const resourceType = String(r?.resource_type ?? "image");
         const kind: "image" | "video" = resourceType === "video" ? "video" : "image";
         const assetUrl = normalizeAssetUrl(r);
-        if (!publicId || !assetUrl) return null;
+        if (!sourcePublicId || !publicId || !assetUrl) return null;
 
         return {
           id: publicId,
