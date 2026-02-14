@@ -176,7 +176,7 @@ function toPhotosFromCloudinaryItems(items: NonNullable<CloudinaryGalleryRespons
     const title = defaultCaption(filename);
     all.push({
       id: it.id,
-      url: normalizeCloudinaryUrl(it.url),
+      url: buildCloudinaryDeliveryUrlFromManifestItem(it),
       kind: it.kind,
       title,
       description: normalizeDescription(description),
@@ -223,6 +223,49 @@ function normalizeCloudinaryUrl(raw: string) {
 
   u.pathname = `/${encoded.join("/")}`;
   return u.toString();
+}
+
+function ensurePublicIdHasExtension(publicId: string, filename: string) {
+  const extIdx = filename.lastIndexOf(".");
+  const ext = extIdx > 0 ? filename.slice(extIdx) : "";
+  if (!ext) return publicId;
+  const lower = publicId.toLowerCase();
+  if (lower.endsWith(ext.toLowerCase())) return publicId;
+  return `${publicId}${ext}`;
+}
+
+function buildCloudinaryDeliveryUrlFromManifestItem(
+  it: NonNullable<CloudinaryGalleryResponse["items"]>[number],
+) {
+  const normalized = normalizeCloudinaryUrl(it.url);
+  let u: URL;
+  try {
+    u = new URL(normalized);
+  } catch {
+    return normalized;
+  }
+
+  if (!u.hostname.endsWith("res.cloudinary.com")) return normalized;
+
+  const parts = u.pathname.split("/").filter(Boolean);
+  const cloudName = parts[0] ?? "";
+  const uploadIdx = parts.indexOf("upload");
+  const afterUploadIdx = uploadIdx >= 0 ? uploadIdx + 1 : -1;
+  const versionSeg = afterUploadIdx >= 0 ? (parts[afterUploadIdx] ?? "") : "";
+  const hasVersion = /^v\d+$/.test(versionSeg);
+
+  const withExt = ensurePublicIdHasExtension(String(it.publicId ?? ""), String(it.filename ?? ""));
+  const publicIdPath = withExt
+    .split("/")
+    .filter(Boolean)
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+
+  if (!cloudName || !publicIdPath) return normalized;
+
+  const resourceType = it.kind === "video" ? "video" : "image";
+  const v = hasVersion ? `/${versionSeg}` : "";
+  return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload${v}/${publicIdPath}`;
 }
 
 function sortPhotos(items: Photo[]) {
