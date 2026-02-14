@@ -44,12 +44,13 @@ export default function GallerySlideshow({ photos, startIndex = 0, vintage = fal
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
   const [index, setIndex] = useState(safeStart);
-  const [incoming, setIncoming] = useState<number | null>(null);
-  const [phase, setPhase] = useState<"idle" | "fade">("idle");
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
 
   const timerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fadingRef = useRef<(() => void) | null>(null);
+  const transitionTokenRef = useRef(0);
 
   const track = useMemo(
     () => encodeURI("/music/Michael Giacchino - Married Life (192kbps).mp3"),
@@ -71,22 +72,25 @@ export default function GallerySlideshow({ photos, startIndex = 0, vintage = fal
     return encodeURI(p.url || fallback || "");
   };
 
-  const fadeTo = useCallback(
+  const transitionTo = useCallback(
     (to: number) => {
-      if (to === index || phase !== "idle") return;
-      setIncoming(to);
-      setPhase("fade");
+      if (list.length <= 1) return;
+      if (to === index || transitioning) return;
+      const token = (transitionTokenRef.current += 1);
+      setPrevIndex(index);
+      setIndex(to);
+      setTransitioning(true);
       window.setTimeout(() => {
-        setIndex(to);
-        setIncoming(null);
-        setPhase("idle");
-      }, 520);
+        if (transitionTokenRef.current !== token) return;
+        setPrevIndex(null);
+        setTransitioning(false);
+      }, 720);
     },
-    [index, phase],
+    [index, list.length, transitioning],
   );
 
-  const goNext = useCallback(() => fadeTo(nextCandidate(1)), [fadeTo, nextCandidate]);
-  const goPrev = useCallback(() => fadeTo(nextCandidate(-1)), [fadeTo, nextCandidate]);
+  const goNext = useCallback(() => transitionTo(nextCandidate(1)), [nextCandidate, transitionTo]);
+  const goPrev = useCallback(() => transitionTo(nextCandidate(-1)), [nextCandidate, transitionTo]);
 
   useEffect(() => {
     if (!playing || list.length <= 1) return;
@@ -102,7 +106,7 @@ export default function GallerySlideshow({ photos, startIndex = 0, vintage = fal
       if (timerRef.current) window.clearTimeout(timerRef.current);
       timerRef.current = null;
     };
-  }, [goNext, index, list.length, playing]);
+  }, [goNext, list.length, playing]);
 
   const exit = useCallback(() => {
     const a = audioRef.current;
@@ -171,6 +175,76 @@ export default function GallerySlideshow({ photos, startIndex = 0, vintage = fal
 
   if (list.length === 0 || !current) return null;
 
+  const renderSlide = (p: Photo, key: string, mode: "in" | "out") => {
+    const url = toUrl(p);
+    const fallback = localUrlForFilename(p.filename);
+    const isOut = mode === "out";
+
+    return (
+      <div
+        key={key}
+        className={cn(
+          "absolute inset-0 grid place-items-center p-6",
+          "transition duration-700",
+          transitioning
+            ? isOut
+              ? "opacity-0 blur-xl scale-[0.995]"
+              : "opacity-100 blur-0 scale-100"
+            : "opacity-100 blur-0 scale-100",
+        )}
+      >
+        <div className={cn("w-full max-w-4xl", !isOut && "receipt-print")}>
+          <div className="relative overflow-hidden rounded-3xl bg-[#f7f2e8] text-black shadow-[0_24px_70px_rgba(0,0,0,0.55)] ring-1 ring-black/10">
+            <div className="absolute inset-0 opacity-[0.10] mix-blend-multiply [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.20)_0,rgba(0,0,0,0.20)_1px,transparent_2px,transparent_5px)]" />
+            <div
+              className={cn("pointer-events-none absolute inset-0", !isOut && "receipt-scan")}
+              style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 45%, transparent 100%)" }}
+            />
+
+            <div className="px-5 pt-5">
+              <div className="flex items-center justify-between">
+                <div className="font-[var(--font-crt)] text-[11px] tracking-[0.22em] text-black/70">LOVE RECEIPT</div>
+                <div className="font-[var(--font-crt)] text-[11px] text-black/55">{index + 1}/{list.length}</div>
+              </div>
+              <div className="mt-3 overflow-hidden rounded-2xl bg-black/10">
+                {vintage ? (
+                  <div className="p-4">
+                    <PolaroidImage
+                      src={url}
+                      fallbackSrc={fallback ? encodeURI(fallback) : undefined}
+                      title={p.title || p.description || "Kenangan"}
+                      createdAt={p.createdAt}
+                      aspectClassName="aspect-[4/3]"
+                      imageClassName="object-contain bg-black/5"
+                      loading="eager"
+                      showMeta={false}
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (fallback) img.src = encodeURI(fallback);
+                    }}
+                  />
+                )}
+              </div>
+              <div className="mt-4 pb-6 font-[var(--font-crt)]">
+                <div className="text-[12px] leading-5 text-black/85">{p.title || p.description || "Kenangan"}</div>
+                <div className="mt-1 text-[11px] text-black/55">{formatDate(p.createdAt) || ""}</div>
+              </div>
+            </div>
+
+            <div className="absolute -bottom-2 left-0 right-0 h-6 bg-[#f7f2e8] [background-image:radial-gradient(circle_at_8px_0px,transparent_7px,#f7f2e8_7.2px)] [background-size:16px_16px] [background-repeat:repeat-x]" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm">
       <audio ref={audioRef} src={track} loop preload="metadata" />
@@ -221,83 +295,8 @@ export default function GallerySlideshow({ photos, startIndex = 0, vintage = fal
 
         <div className="relative mt-4 flex-1 overflow-hidden rounded-3xl border border-white/10 bg-black/40">
           <div className="absolute inset-0">
-            {vintage ? (
-              <div className="absolute inset-0 grid place-items-center p-6">
-                <div className="relative h-full w-full max-w-4xl">
-                  <div
-                    className={cn(
-                      "absolute inset-0 grid place-items-center transition duration-500",
-                      phase === "fade" ? "opacity-0 blur-xl" : "opacity-100 blur-0",
-                    )}
-                  >
-                    <PolaroidImage
-                      src={toUrl(current)}
-                      fallbackSrc={(() => {
-                        const fallback = localUrlForFilename(current.filename);
-                        return fallback ? encodeURI(fallback) : undefined;
-                      })()}
-                      title={current.title || current.description || "Kenangan"}
-                      createdAt={current.createdAt}
-                      aspectClassName="aspect-[4/3]"
-                      imageClassName="object-contain bg-black/5"
-                      loading="eager"
-                    />
-                  </div>
-                  {incoming !== null && list[incoming] && (
-                    <div
-                      className={cn(
-                        "absolute inset-0 grid place-items-center transition duration-500",
-                        phase === "fade" ? "opacity-100 blur-0" : "opacity-0 blur-xl",
-                      )}
-                    >
-                      <PolaroidImage
-                        src={toUrl(list[incoming])}
-                        fallbackSrc={(() => {
-                          const fallback = localUrlForFilename(list[incoming]?.filename ?? "");
-                          return fallback ? encodeURI(fallback) : undefined;
-                        })()}
-                        title={list[incoming]?.title || list[incoming]?.description || "Kenangan"}
-                        createdAt={list[incoming]?.createdAt}
-                        aspectClassName="aspect-[4/3]"
-                        imageClassName="object-contain bg-black/5"
-                        loading="eager"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <>
-                <img
-                  src={toUrl(current)}
-                  alt=""
-                  className={cn(
-                    "absolute inset-0 h-full w-full object-contain transition duration-500",
-                    phase === "fade" ? "opacity-0 blur-xl" : "opacity-100 blur-0",
-                  )}
-                  onError={(e) => {
-                    const img = e.currentTarget;
-                    const fallback = localUrlForFilename(current.filename);
-                    if (fallback) img.src = encodeURI(fallback);
-                  }}
-                />
-                {incoming !== null && list[incoming] && (
-                  <img
-                    src={toUrl(list[incoming])}
-                    alt=""
-                    className={cn(
-                      "absolute inset-0 h-full w-full object-contain transition duration-500",
-                      phase === "fade" ? "opacity-100 blur-0" : "opacity-0 blur-xl",
-                    )}
-                    onError={(e) => {
-                      const img = e.currentTarget;
-                      const fallback = localUrlForFilename(list[incoming]?.filename ?? "");
-                      if (fallback) img.src = encodeURI(fallback);
-                    }}
-                  />
-                )}
-              </>
-            )}
+            {prevIndex !== null && list[prevIndex] && renderSlide(list[prevIndex], `out-${prevIndex}-${transitionTokenRef.current}`, "out")}
+            {renderSlide(current, `in-${index}-${transitionTokenRef.current}`, "in")}
           </div>
 
           <button

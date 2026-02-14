@@ -16,6 +16,7 @@ export default function PolaroidImage({
   imageClassName,
   aspectClassName = "aspect-[4/3]",
   loading,
+  showMeta = true,
 }: {
   src: string;
   fallbackSrc?: string;
@@ -25,6 +26,7 @@ export default function PolaroidImage({
   imageClassName?: string;
   aspectClassName?: string;
   loading?: "eager" | "lazy";
+  showMeta?: boolean;
 }) {
   const date = formatDate(createdAt);
 
@@ -50,10 +52,12 @@ export default function PolaroidImage({
           loading={loading}
         />
       </div>
-      <div className="mt-3 min-h-[18px]">
-        <div className="truncate font-[var(--font-hand)] text-[13px] text-black/80">{title || "Kenangan"}</div>
-        <div className="mt-0.5 truncate font-[var(--font-hand)] text-[11px] text-black/60">{date || ""}</div>
-      </div>
+      {showMeta && (
+        <div className="mt-3 min-h-[18px]">
+          <div className="truncate font-[var(--font-hand)] text-[13px] text-black/80">{title || "Kenangan"}</div>
+          <div className="mt-0.5 truncate font-[var(--font-hand)] text-[11px] text-black/60">{date || ""}</div>
+        </div>
+      )}
     </div>
   );
 }

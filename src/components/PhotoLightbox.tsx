@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import PolaroidImage from "@/components/PolaroidImage";
 import { localUrlForFilename, type Photo } from "@/utils/photos";
@@ -16,30 +17,72 @@ export default function PhotoLightbox({
   onIndex: (i: number) => void;
   onClose: () => void;
 }) {
+  const length = photos.length;
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (length <= 0) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        onIndex((index - 1 + length) % length);
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        onIndex((index + 1) % length);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [index, length, onClose, onIndex]);
+
   const p = photos[index];
   if (!p) return null;
 
   const fallback = localUrlForFilename(p.filename);
 
-  const prev = () => onIndex((index - 1 + photos.length) % photos.length);
-  const next = () => onIndex((index + 1) % photos.length);
+  const prev = () => onIndex((index - 1 + length) % length);
+  const next = () => onIndex((index + 1) % length);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--bg)]">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--bg)]"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className={cn(
+            "absolute right-3 top-3 z-10",
+            "inline-flex h-10 w-10 items-center justify-center rounded-full",
+            "border border-white/10 bg-black/45 text-white",
+            "transition hover:bg-black/60",
+          )}
+          aria-label="Tutup"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
         <div className="flex items-center justify-between gap-3 border-b border-white/10 p-3">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold text-[var(--text)]">{p.title || "Kenangan"}</div>
             <div className="text-xs text-[var(--muted)]">{p.folder}</div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[var(--text)] transition hover:bg-white/10"
-            aria-label="Tutup"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="h-9 w-9" aria-hidden="true" />
         </div>
 
         <div className="relative">
