@@ -49,6 +49,10 @@ function folderFromPublicId(publicId) {
     const s = String(seg || "").toLowerCase();
     const map = {
       "(spesial) peyukkan": "(SPESIAL) PEYUKKAN",
+      "(spesial)-peyukkan": "(SPESIAL) PEYUKKAN",
+      "(spesial)-peyukan": "(SPESIAL) PEYUKKAN",
+      "(spesial)_peyukkan": "(SPESIAL) PEYUKKAN",
+      "(spesial)_peyukan": "(SPESIAL) PEYUKKAN",
       "spesial peyukkan": "(SPESIAL) PEYUKKAN",
       "spesial_peyukan": "(SPESIAL) PEYUKKAN",
       "spesial-peyukan": "(SPESIAL) PEYUKKAN",
@@ -89,8 +93,13 @@ function encodePublicId(publicId) {
 
 function rewriteFolderSegment(seg) {
   const decoded = safeDecode(String(seg || ""));
-  const norm = decoded.toLowerCase().replace(/\s+/g, " ").trim();
-  if (norm === "(spesial) peyukkan" || norm === "spesial peyukkan") return "spesial_peyukan";
+  const norm = decoded
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (norm === "(spesial) peyukkan" || norm === "spesial peyukkan") return "(spesial)-peyukkan";
   return decoded;
 }
 
