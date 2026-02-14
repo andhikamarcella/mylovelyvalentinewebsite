@@ -116,7 +116,8 @@ export async function fetchPhotos() {
 async function fetchFromLocal() {
   const modules = import.meta.glob("/gallery/**/*.{jpg,jpeg,JPEG,JPG,png,PNG,mp4,MP4}", {
     eager: true,
-    as: "url",
+    query: "?url",
+    import: "default",
   }) as Record<string, string>;
 
   const entries = Object.entries(modules);
