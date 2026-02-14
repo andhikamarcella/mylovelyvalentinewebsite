@@ -58,6 +58,11 @@ const SPECIAL_DESCRIPTIONS: Record<string, string> = {
   "omoooo.JPEG": "yucukkk bangett paha kita kan sayang ggemess banget kita berdua omoooo"
 };
 
+function normalizeDescriptionKey(filename: string) {
+  const base = stripExtension(String(filename || "")).toLowerCase();
+  return base.replace(/[^a-z0-9]+/g, "");
+}
+
 const SPECIAL_DESCRIPTIONS_NORM: Record<string, string> = Object.fromEntries(
   Object.entries(SPECIAL_DESCRIPTIONS).map(([k, v]) => [k.toLowerCase(), v]),
 );
@@ -66,9 +71,15 @@ const SPECIAL_DESCRIPTIONS_BASE_NORM: Record<string, string> = Object.fromEntrie
   Object.entries(SPECIAL_DESCRIPTIONS).map(([k, v]) => [stripExtension(k).toLowerCase(), v]),
 );
 
+const SPECIAL_DESCRIPTIONS_KEY_NORM: Record<string, string> = Object.fromEntries(
+  Object.entries(SPECIAL_DESCRIPTIONS).map(([k, v]) => [normalizeDescriptionKey(k), v]),
+);
+
 function descriptionForFilename(filename: string) {
   const lower = filename.toLowerCase();
-  return SPECIAL_DESCRIPTIONS_NORM[lower] ?? SPECIAL_DESCRIPTIONS_BASE_NORM[stripExtension(lower)] ?? "";
+  const baseLower = stripExtension(lower);
+  const key = normalizeDescriptionKey(filename);
+  return SPECIAL_DESCRIPTIONS_NORM[lower] ?? SPECIAL_DESCRIPTIONS_BASE_NORM[baseLower] ?? SPECIAL_DESCRIPTIONS_KEY_NORM[key] ?? "";
 }
 
 function stripExtension(filename: string) {
