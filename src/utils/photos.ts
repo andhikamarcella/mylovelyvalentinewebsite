@@ -199,7 +199,7 @@ async function fetchFromCloudinaryStaticFirst() {
       }
     }
   } catch {
-    
+    return fetchFromCloudinaryApi();
   }
 
   return fetchFromCloudinaryApi();
@@ -290,8 +290,8 @@ async function fetchFromCloudinaryApi() {
       let serverMsg = "";
       if (contentType.includes("application/json")) {
         try {
-          const err = (await r.json()) as any;
-          serverMsg = typeof err?.message === "string" ? err.message : "";
+          const err = (await r.json()) as { message?: unknown };
+          serverMsg = typeof err.message === "string" ? err.message : "";
         } catch {
           serverMsg = "";
         }

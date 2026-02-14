@@ -12,6 +12,8 @@ type GalleryItem = {
   height?: number;
 };
 
+type CloudinaryResource = Record<string, unknown>;
+
 function normalizeDisplayFilename(name: string) {
   const base = String(name || "");
   const m = base.match(/^(img)_([0-9]+)(\.[a-z0-9]+)?$/i);
@@ -68,7 +70,7 @@ function folderFromPublicId(publicId: string) {
   return folderParts.map(normalizeFolderSegment).join(" / ") || "Galeri";
 }
 
-function normalizeAssetUrl(resource: any) {
+function normalizeAssetUrl(resource: CloudinaryResource) {
   const rawCloudinaryUrl = process.env.CLOUDINARY_URL;
   let cloudName = "";
   if (rawCloudinaryUrl) {
@@ -79,12 +81,12 @@ function normalizeAssetUrl(resource: any) {
     }
   }
 
-  const publicId = String(resource?.public_id ?? "");
-  const resourceType = String(resource?.resource_type ?? "image");
-  const version = resource?.version;
-  const format = resource?.format ? String(resource.format) : "";
+  const publicId = String(resource.public_id ?? "");
+  const resourceType = String(resource.resource_type ?? "image");
+  const version = resource.version;
+  const format = resource.format ? String(resource.format) : "";
 
-  if (!cloudName || !publicId) return String(resource?.secure_url ?? resource?.url ?? "");
+  if (!cloudName || !publicId) return String(resource.secure_url ?? resource.url ?? "");
 
   const encodeSegment = (seg: string) =>
     encodeURIComponent(seg).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
@@ -149,13 +151,15 @@ export default async function handler(request: Request) {
     ];
 
     const items: GalleryItem[] = resources
-      .map((r: any) => {
-        const sourcePublicId = String(r?.public_id ?? "");
+      .map((r: unknown) => {
+        if (!r || typeof r !== "object") return null;
+        const res = r as CloudinaryResource;
+        const sourcePublicId = String(res.public_id ?? "");
         const publicId = rewritePublicId(sourcePublicId);
-        const format = r?.format ? String(r.format) : undefined;
-        const resourceType = String(r?.resource_type ?? "image");
+        const format = res.format ? String(res.format) : undefined;
+        const resourceType = String(res.resource_type ?? "image");
         const kind: "image" | "video" = resourceType === "video" ? "video" : "image";
-        const assetUrl = normalizeAssetUrl(r);
+        const assetUrl = normalizeAssetUrl(res);
         if (!sourcePublicId || !publicId || !assetUrl) return null;
 
         return {
@@ -165,9 +169,9 @@ export default async function handler(request: Request) {
           kind,
           folder: folderFromPublicId(publicId),
           filename: filenameFromPublicId(publicId, format),
-          createdAt: r?.created_at ? String(r.created_at) : undefined,
-          width: typeof r?.width === "number" ? r.width : undefined,
-          height: typeof r?.height === "number" ? r.height : undefined,
+          createdAt: res.created_at ? String(res.created_at) : undefined,
+          width: typeof res.width === "number" ? (res.width as number) : undefined,
+          height: typeof res.height === "number" ? (res.height as number) : undefined,
         } satisfies GalleryItem;
       })
       .filter(Boolean) as GalleryItem[];
@@ -178,10 +182,11 @@ export default async function handler(request: Request) {
     });
 
     return Response.json({ items, nextCursor: null });
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Gagal memuat galeri";
     return Response.json(
       {
-        message: e?.message ?? "Gagal memuat galeri",
+        message,
         hint: "Cek CLOUDINARY_URL (Production) di Vercel dan pastikan asset ada di folder 'gallery'",
       },
       { status: 500 },

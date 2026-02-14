@@ -1,14 +1,17 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PolaroidImage from "@/components/PolaroidImage";
 import { localUrlForFilename, type Photo } from "@/utils/photos";
 
 export default function PhotoLightbox({
   photos,
+  vintage = false,
   index,
   onClose,
   onIndex,
 }: {
   photos: Photo[];
+  vintage?: boolean;
   index: number;
   onIndex: (i: number) => void;
   onClose: () => void;
@@ -47,6 +50,18 @@ export default function PhotoLightbox({
               src={encodeURI(p.url)}
               className="max-h-[72vh] w-full bg-black/30 object-contain"
             />
+          ) : vintage ? (
+            <div className="mx-auto max-w-3xl p-5">
+              <PolaroidImage
+                src={encodeURI(p.url)}
+                fallbackSrc={fallback ? encodeURI(fallback) : undefined}
+                title={p.title || p.description || "Kenangan"}
+                createdAt={p.createdAt}
+                aspectClassName="aspect-[4/3]"
+                imageClassName="object-contain bg-black/10"
+                loading="eager"
+              />
+            </div>
           ) : (
             <img
               src={encodeURI(p.url)}

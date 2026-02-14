@@ -90,8 +90,12 @@
    - Grid 3 kolom desktop (gap 16–20px).
    - Card: foto (cover), caption, tanggal.
    - Interaksi: klik card → modal/lightbox.
+   - Toggle tambahan (global):
+     - Play Slideshow: mode layar penuh auto-geser 3–5 detik dengan transisi fade/blur.
+     - Mode Polaroid Vintage: semua foto pakai frame putih + tanggal kecil + font handwriting.
 4. **Lightbox Modal**
    - Foto besar, caption, tanggal, tombol prev/next, close.
+   - Saat Mode Vintage aktif: tampilkan foto dalam frame polaroid.
 
 ---
 
@@ -112,6 +116,17 @@
    - Opsi checkbox “Ingat di perangkat ini” (simpan flag sesi).
 2. **Secret Content (setelah lolos)**
    - Konten kejutan: teks romantis + satu visual (gambar/ilustrasi) + tombol kembali ke Beranda.
+
+---
+
+## 4) Anniversary Mode (00:00)
+### Trigger
+- Saat jam 00:00 pada hari anniversary (berdasarkan tanggal jadian), tampilkan mode perayaan.
+
+### Visual + Audio + Flow
+- Overlay gelap + confetti/fireworks.
+- Musik fade-in pelan.
+- Auto redirect ke halaman surprise (mis. /secret).
 
 ## Interaction States
 - Tema: toggle mengubah class root (mis. `data-theme`) dan animasi transisi warna.

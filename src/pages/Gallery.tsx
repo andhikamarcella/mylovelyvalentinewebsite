@@ -1,10 +1,13 @@
-import { Film, LayoutGrid, List } from "lucide-react";
+import { Film, LayoutGrid, List, PlayCircle, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import GallerySlideshow from "@/components/GallerySlideshow";
+import PolaroidImage from "@/components/PolaroidImage";
 import PhotoLightbox from "@/components/PhotoLightbox";
 import StarsBackdrop from "@/components/StarsBackdrop";
 import TopNav from "@/components/TopNav";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/useAppStore";
 import { fetchPhotos, localUrlForFilename, type Photo } from "@/utils/photos";
 
 export default function Gallery() {
@@ -14,6 +17,9 @@ export default function Gallery() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [folder, setFolder] = useState<string>("Semua");
   const [query, setQuery] = useState<string>("");
+  const vintage = useAppStore((s) => s.vintage);
+  const toggleVintage = useAppStore((s) => s.toggleVintage);
+  const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<"grid" | "timeline">("grid");
   const [month, setMonth] = useState<string>("Semua");
@@ -80,6 +86,8 @@ export default function Gallery() {
     return out;
   }, [folder, month, photos, query]);
 
+  const slideshowPhotos = useMemo(() => filtered.filter((p) => p.kind === "image"), [filtered]);
+
   const months = useMemo(() => {
     const set = new Set<string>();
     photos.forEach((p) => {
@@ -145,6 +153,13 @@ export default function Gallery() {
   return (
     <div className="min-h-[100svh] bg-[color:var(--bg)] text-[var(--text)]">
       <TopNav />
+      {slideshowOpen && (
+        <GallerySlideshow
+          photos={slideshowPhotos}
+          vintage={vintage}
+          onExit={() => setSlideshowOpen(false)}
+        />
+      )}
       <main className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <StarsBackdrop density={70} />
@@ -260,26 +275,45 @@ export default function Gallery() {
                           key={p.id}
                           type="button"
                           onClick={() => setLightboxIndex(indexById.get(p.id) ?? 0)}
-                          className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 text-left transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(0,0,0,0.55)]"
+                          className={cn(
+                            "group relative rounded-2xl text-left transition hover:-translate-y-0.5",
+                            vintage ? "border border-transparent bg-transparent" : "overflow-hidden border border-white/10 bg-black/20",
+                            !vintage && "hover:shadow-[0_18px_50px_rgba(0,0,0,0.55)]",
+                          )}
                           aria-label={`Buka highlight ${p.title}`}
                         >
-                          <div className="aspect-[4/3] overflow-hidden">
-                            <img
+                          {vintage ? (
+                            <PolaroidImage
                               src={encodeURI(p.url)}
-                              data-fallback={(() => {
+                              fallbackSrc={(() => {
                                 const fallback = localUrlForFilename(p.filename);
                                 return fallback ? encodeURI(fallback) : undefined;
                               })()}
-                              onError={onImageError}
-                              alt=""
-                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                              title={p.description || p.title}
+                              createdAt={p.createdAt}
                               loading="lazy"
                             />
-                          </div>
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
-                          <div className="pointer-events-none absolute bottom-3 left-3 right-3 text-xs text-white/90 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
-                            {p.description || p.title}
-                          </div>
+                          ) : (
+                            <>
+                              <div className="aspect-[4/3] overflow-hidden">
+                                <img
+                                  src={encodeURI(p.url)}
+                                  data-fallback={(() => {
+                                    const fallback = localUrlForFilename(p.filename);
+                                    return fallback ? encodeURI(fallback) : undefined;
+                                  })()}
+                                  onError={onImageError}
+                                  alt=""
+                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                                  loading="lazy"
+                                />
+                              </div>
+                              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100" />
+                              <div className="pointer-events-none absolute bottom-3 left-3 right-3 text-xs text-white/90 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                                {p.description || p.title}
+                              </div>
+                            </>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -317,6 +351,38 @@ export default function Gallery() {
                     >
                       <List className="h-4 w-4" />
                       Timeline
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (slideshowPhotos.length === 0) return;
+                        setSlideshowOpen(true);
+                      }}
+                      disabled={slideshowPhotos.length === 0}
+                      className={cn(
+                        "inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-xs text-[var(--text)]",
+                        "transition hover:bg-white/10",
+                        slideshowPhotos.length === 0 && "opacity-50 hover:bg-white/5",
+                      )}
+                      aria-label="Play Slideshow"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      Play Slideshow
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleVintage}
+                      className={cn(
+                        "inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-xs text-[var(--text)]",
+                        "transition hover:bg-white/10",
+                        vintage && "ring-2 ring-[color:var(--accent)]",
+                      )}
+                      aria-label="Toggle Vintage"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Vintage
                     </button>
                   </div>
 
@@ -356,7 +422,13 @@ export default function Gallery() {
                             key={p.id}
                             type="button"
                             onClick={() => setLightboxIndex(idx)}
-                            className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20 text-left transition hover:-translate-y-0.5 hover:shadow-[0_18px_55px_rgba(0,0,0,0.60)]"
+                            className={cn(
+                              "group relative rounded-xl text-left transition hover:-translate-y-0.5",
+                              vintage && p.kind === "image"
+                                ? "border border-transparent bg-transparent"
+                                : "overflow-hidden border border-white/10 bg-black/20",
+                              !(vintage && p.kind === "image") && "hover:shadow-[0_18px_55px_rgba(0,0,0,0.60)]",
+                            )}
                             aria-label={`Buka ${p.title}`}
                           >
                             {p.kind === "video" && (
@@ -365,35 +437,49 @@ export default function Gallery() {
                                 VIDEO
                               </div>
                             )}
+                            {vintage && p.kind === "image" ? (
+                              <PolaroidImage
+                                src={encodeURI(p.url)}
+                                fallbackSrc={(() => {
+                                  const fallback = localUrlForFilename(p.filename);
+                                  return fallback ? encodeURI(fallback) : undefined;
+                                })()}
+                                title={p.title || p.description || "Kenangan"}
+                                createdAt={p.createdAt}
+                                loading="lazy"
+                              />
+                            ) : (
+                              <>
+                                <div className="aspect-[4/3] overflow-hidden">
+                                  {p.kind === "video" ? (
+                                    <video
+                                      playsInline
+                                      muted
+                                      preload="metadata"
+                                      src={encodeURI(p.url)}
+                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                                    />
+                                  ) : (
+                                    <img
+                                      src={encodeURI(p.url)}
+                                      data-fallback={(() => {
+                                        const fallback = localUrlForFilename(p.filename);
+                                        return fallback ? encodeURI(fallback) : undefined;
+                                      })()}
+                                      onError={onImageError}
+                                      alt=""
+                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                                      loading="lazy"
+                                    />
+                                  )}
+                                </div>
 
-                            <div className="aspect-[4/3] overflow-hidden">
-                              {p.kind === "video" ? (
-                                <video
-                                  playsInline
-                                  muted
-                                  preload="metadata"
-                                  src={encodeURI(p.url)}
-                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
-                                />
-                              ) : (
-                                <img
-                                  src={encodeURI(p.url)}
-                                  data-fallback={(() => {
-                                    const fallback = localUrlForFilename(p.filename);
-                                    return fallback ? encodeURI(fallback) : undefined;
-                                  })()}
-                                  onError={onImageError}
-                                  alt=""
-                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
-                                  loading="lazy"
-                                />
-                              )}
-                            </div>
-
-                            <div className="border-t border-white/10 p-3">
-                              <div className="truncate text-sm font-semibold text-white">{p.title || "Kenangan"}</div>
-                              <div className="mt-1 line-clamp-2 text-xs text-white/80">{p.description || p.folder}</div>
-                            </div>
+                                <div className="border-t border-white/10 p-3">
+                                  <div className="truncate text-sm font-semibold text-white">{p.title || "Kenangan"}</div>
+                                  <div className="mt-1 line-clamp-2 text-xs text-white/80">{p.description || p.folder}</div>
+                                </div>
+                              </>
+                            )}
                           </button>
                         );
                       })}
@@ -438,7 +524,12 @@ export default function Gallery() {
                               key={p.id}
                               type="button"
                               onClick={() => setLightboxIndex(indexById.get(p.id) ?? 0)}
-                              className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20 text-left transition hover:-translate-y-0.5"
+                              className={cn(
+                                "group relative rounded-xl text-left transition hover:-translate-y-0.5",
+                                vintage && p.kind === "image"
+                                  ? "border border-transparent bg-transparent"
+                                  : "overflow-hidden border border-white/10 bg-black/20",
+                              )}
                               aria-label={`Buka ${p.title}`}
                             >
                               {p.kind === "video" && (
@@ -447,34 +538,49 @@ export default function Gallery() {
                                   VIDEO
                                 </div>
                               )}
-                              <div className="aspect-[4/3] overflow-hidden">
-                                {p.kind === "video" ? (
-                                  <video
-                                    playsInline
-                                    muted
-                                    preload="metadata"
-                                    src={encodeURI(p.url)}
-                                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
-                                  />
-                                ) : (
-                                  <img
-                                    src={encodeURI(p.url)}
-                                    data-fallback={(() => {
-                                      const fallback = localUrlForFilename(p.filename);
-                                      return fallback ? encodeURI(fallback) : undefined;
-                                    })()}
-                                    onError={onImageError}
-                                    alt=""
-                                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
-                                    loading="lazy"
-                                  />
-                                )}
-                              </div>
+                              {vintage && p.kind === "image" ? (
+                                <PolaroidImage
+                                  src={encodeURI(p.url)}
+                                  fallbackSrc={(() => {
+                                    const fallback = localUrlForFilename(p.filename);
+                                    return fallback ? encodeURI(fallback) : undefined;
+                                  })()}
+                                  title={p.title || p.description || "Kenangan"}
+                                  createdAt={p.createdAt}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <>
+                                  <div className="aspect-[4/3] overflow-hidden">
+                                    {p.kind === "video" ? (
+                                      <video
+                                        playsInline
+                                        muted
+                                        preload="metadata"
+                                        src={encodeURI(p.url)}
+                                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                                      />
+                                    ) : (
+                                      <img
+                                        src={encodeURI(p.url)}
+                                        data-fallback={(() => {
+                                          const fallback = localUrlForFilename(p.filename);
+                                          return fallback ? encodeURI(fallback) : undefined;
+                                        })()}
+                                        onError={onImageError}
+                                        alt=""
+                                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
+                                        loading="lazy"
+                                      />
+                                    )}
+                                  </div>
 
-                              <div className="border-t border-white/10 p-3">
-                                <div className="truncate text-sm font-semibold text-white">{p.title}</div>
-                                <div className="mt-1 line-clamp-2 text-xs text-white/80">{p.description || p.folder}</div>
-                              </div>
+                                  <div className="border-t border-white/10 p-3">
+                                    <div className="truncate text-sm font-semibold text-white">{p.title}</div>
+                                    <div className="mt-1 line-clamp-2 text-xs text-white/80">{p.description || p.folder}</div>
+                                  </div>
+                                </>
+                              )}
                             </button>
                           ))}
                         </div>
@@ -490,6 +596,7 @@ export default function Gallery() {
         {lightboxIndex !== null && (
           <PhotoLightbox
             photos={photos}
+            vintage={vintage}
             index={lightboxIndex}
             onIndex={setLightboxIndex}
             onClose={() => setLightboxIndex(null)}

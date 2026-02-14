@@ -1,13 +1,16 @@
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import PolaroidImage from "@/components/PolaroidImage";
 import StarsBackdrop from "@/components/StarsBackdrop";
 import TopNav from "@/components/TopNav";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/useAppStore";
 import { fetchPhotos, localUrlForFilename, type Photo } from "@/utils/photos";
 
 const SECRET_KEY = "valentine_secret_authed";
 const SECRET_REMEMBER = "valentine_secret_remember";
+const GAME_UNLOCK_KEY = "valentine_secret_game_unlocked";
 
 function normalize(s: string) {
   return s
@@ -23,13 +26,15 @@ function isValid(pass: string) {
 }
 
 export default function Secret() {
+  const vintage = useAppStore((s) => s.vintage);
   const [show, setShow] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [remember, setRemember] = useState(() => localStorage.getItem(SECRET_REMEMBER) === "1");
 
   const authed = useMemo(() => localStorage.getItem(SECRET_KEY) === "1", []);
-  const [unlocked, setUnlocked] = useState(authed);
+  const gameUnlocked = useMemo(() => localStorage.getItem(GAME_UNLOCK_KEY) === "1", []);
+  const [unlocked, setUnlocked] = useState(authed || gameUnlocked);
   const [surprise, setSurprise] = useState<Photo[]>([]);
 
   const onImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -148,24 +153,42 @@ export default function Secret() {
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                   <div className="text-sm font-semibold">Kejutan kecil</div>
                   <div className="mt-2 text-sm text-[var(--muted)]">
-                    Kalau kamu baca ini, berarti kamu ingat hari spesial itu. Aku sayang kamu.
+                    {gameUnlocked && !authed
+                      ? "Unlocked dari Claw Machine. Kamu dapet akses rahasia ini sebagai hadiah."
+                      : "Kalau kamu baca ini, berarti kamu ingat hari spesial itu. Aku sayang kamu."}
                   </div>
 
                   {surprise.length > 0 ? (
-                    <div className="mt-4 grid grid-cols-3 gap-2">
+                    <div className={cn("mt-4 grid grid-cols-3 gap-2", vintage && "gap-3")}>
                       {surprise.map((p) => (
-                        <img
-                          key={p.id}
-                          src={encodeURI(p.url)}
-                          data-fallback={(() => {
-                            const fallback = localUrlForFilename(p.filename);
-                            return fallback ? encodeURI(fallback) : undefined;
-                          })()}
-                          onError={onImageError}
-                          alt=""
-                          className="aspect-square w-full rounded-xl border border-white/10 object-cover"
-                          loading="lazy"
-                        />
+                        vintage ? (
+                          <PolaroidImage
+                            key={p.id}
+                            src={encodeURI(p.url)}
+                            fallbackSrc={(() => {
+                              const fallback = localUrlForFilename(p.filename);
+                              return fallback ? encodeURI(fallback) : undefined;
+                            })()}
+                            title={p.title || "Rahasia"}
+                            createdAt={p.createdAt}
+                            aspectClassName="aspect-square"
+                            className="p-2"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <img
+                            key={p.id}
+                            src={encodeURI(p.url)}
+                            data-fallback={(() => {
+                              const fallback = localUrlForFilename(p.filename);
+                              return fallback ? encodeURI(fallback) : undefined;
+                            })()}
+                            onError={onImageError}
+                            alt=""
+                            className="aspect-square w-full rounded-xl border border-white/10 object-cover"
+                            loading="lazy"
+                          />
+                        )
                       ))}
                     </div>
                   ) : (

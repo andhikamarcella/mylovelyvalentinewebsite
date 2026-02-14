@@ -9,6 +9,7 @@ Produk terdiri dari halaman utama berikut:
 1. **Beranda**: opening, hero, navigasi utama, music player (upgrade).
 2. **Mini-game Claw Machine**: gameplay ambil hati, status permainan, hasil.
 3. **Kenangan**: galeri (highlight, timeline toggle, filter, micro-interactions) + amplop & surat dengan sound.
+4. **Surprise / Rahasia**: konten “kejutan” yang bisa terbuka lewat password atau unlock dari mini-game.
 
 ### 2.3 Page Details
 | Page Name | Module Name | Feature description |
@@ -20,12 +21,19 @@ Produk terdiri dari halaman utama berikut:
 | Mini-game Claw Machine | Kontrol permainan | Menggerakkan claw (kiri/kanan), menurunkan claw, dan membatasi input saat animasi drop. |
 | Mini-game Claw Machine | Logika utama game | Menghasilkan posisi “hati”, mendeteksi tangkapan, dan menentukan status menang/kalah. |
 | Mini-game Claw Machine | Status & hasil | Menampilkan indikator status (siap/berjalan/hasil) dan tombol “Main lagi”. |
+| Mini-game Claw Machine | Hadiah random | Saat menang, tampilkan hadiah acak (teks lucu/romantis) sebagai reward. |
+| Mini-game Claw Machine | Badge + unlock | Setelah menang total 5x, unlock badge dan membuka konten rahasia (secret photo/halaman surprise). |
+| Mini-game Claw Machine | Heart + SFX | Saat menang muncul animasi hati; ada sound kecil untuk drop/sukses. |
+| Mini-game Claw Machine | High score (localStorage) | Simpan dan tampilkan skor terbaik di perangkat (mis. total menang tertinggi). |
 | Kenangan | Highlight (upgrade) | Menampilkan pilihan foto/slide unggulan sebagai titik masuk eksplorasi. |
+| Kenangan | Play Slideshow | Mode “Play Slideshow”: foto auto-geser 3–5 detik, transisi fade/blur smooth, musik background pelan dengan auto-fade. |
 | Kenangan | Gallery View + Timeline Toggle (upgrade) | Mengubah tampilan antara grid galeri dan timeline (urut waktu) tanpa reload halaman. |
 | Kenangan | Filter (upgrade) | Memfilter item galeri berdasarkan kategori/tag dan/atau rentang waktu yang tersedia. |
 | Kenangan | Micro-interactions (upgrade) | Memberi respons halus (hover, focus, transisi, loading state) untuk kartu foto dan kontrol UI. |
 | Kenangan | Amplop + Surat (upgrade) | Menampilkan amplop yang bisa diklik untuk membuka surat, dan surat yang bisa dibaca/ditutup. |
 | Kenangan | Sound untuk surat | Memutar sound saat amplop dibuka dan/atau surat dibentangkan; menyediakan kontrol mute khusus efek. |
+| Kenangan | Mode Polaroid Vintage | Toggle global untuk semua foto: frame putih, tanggal kecil, dan font handwriting. |
+| Global | Anniversary Mode 00:00 | Saat jam 00:00 di hari anniversary: background gelap, fireworks/confetti, musik fade-in, lalu auto-redirect ke halaman surprise. |
 
 ## 3. Core Process
 **Alur Pengguna (utama)**

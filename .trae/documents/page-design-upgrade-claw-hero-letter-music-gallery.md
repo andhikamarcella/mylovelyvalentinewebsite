@@ -56,6 +56,13 @@
    - Elemen: status (Ready/Playing/Result), indikator “hati tertangkap” saat sukses, tombol “Main lagi”.
    - Micro: animasi hasil (fade/slide) dan highlight saat menang.
 
+### Upgrade Interaksi (Bonus)
+- Hadiah random: saat menang, tampilkan “reward” acak (teks singkat) di panel hasil.
+- Badge system: total menang 5x unlock badge + membuka konten rahasia (secret photo / halaman surprise).
+- Heart animation: saat menang, munculkan animasi hati melayang di atas stage.
+- SFX kecil: drop (saat tombol drop ditekan) dan success (saat menang) dengan volume pelan.
+- High score: simpan skor terbaik (mis. total menang tertinggi) di localStorage dan tampilkan di panel.
+
 ---
 
 ## 3) Kenangan (Galeri + Amplop & Surat)
@@ -74,6 +81,9 @@
 2. Toolbar
    - Toggle: "Grid" / "Timeline" (segmented control).
    - Filter: dropdown/tag chips; state “aktif” jelas; tombol “Reset”.
+   - Toggle tambahan:
+     - Play Slideshow: membuka mode layar penuh.
+     - Vintage Mode: mengubah style semua foto menjadi polaroid vintage.
 3. Gallery Grid
    - Kartu: thumbnail, judul singkat/tanggal.
    - Micro-interactions: hover lift + zoom ringan, skeleton saat loading asset, fokus keyboard.
@@ -83,3 +93,30 @@
    - Amplop: kartu besar dengan animasi hover (wiggle halus) dan klik untuk membuka.
    - Surat: panel/modal terpusat; animasi unfold; tombol tutup.
    - Sound: auto-play saat open (jika user gesture sudah ada), tombol mute SFX khusus, dan tombol replay sound.
+
+### Play Slideshow (Mini cinematic)
+- Mode layar penuh dari halaman Kenangan.
+- Foto auto-geser tiap 3–5 detik (randomized interval).
+- Transisi smooth: fade + blur (crossfade) tanpa patah.
+- Background music pelan: auto-fade in saat play, auto-fade out saat pause/keluar.
+
+### Mode Polaroid Vintage
+- Semua foto (grid, timeline, highlight, lightbox, slideshow) mendapat:
+  - Frame putih (polaroid)
+  - Caption tanggal kecil di bawah
+  - Font handwriting untuk tanggal/caption
+- Toggle bersifat global dan disimpan di localStorage.
+
+---
+
+## 4) Anniversary Fireworks Mode
+### Trigger
+- Saat local time memasuki jam 00:00 pada tanggal anniversary.
+
+### Visual
+- Background jadi lebih gelap (overlay full-screen).
+- Fireworks/confetti animation ringan (DOM/CSS) di atas konten.
+
+### Audio & Flow
+- Musik fade-in pelan.
+- Setelah beberapa detik, auto redirect ke halaman surprise.

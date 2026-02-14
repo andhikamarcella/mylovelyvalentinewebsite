@@ -2,6 +2,7 @@ import { Heart } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
+import VintageToggle from "@/components/VintageToggle";
 
 function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
   return (
@@ -44,6 +45,7 @@ export default function TopNav({ className }: { className?: string }) {
           <NavItem to="/kenangan">Kenangan</NavItem>
           <NavItem to="/game">Claw</NavItem>
           <NavItem to="/secret">Rahasia</NavItem>
+          <VintageToggle className="ml-1" />
           <ThemeToggle className="ml-1" />
         </nav>
       </div>
