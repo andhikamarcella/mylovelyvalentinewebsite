@@ -13,6 +13,7 @@ export default function Gallery() {
   const [error, setError] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [folder, setFolder] = useState<string>("Semua");
+  const [query, setQuery] = useState<string>("");
   const [page, setPage] = useState(1);
   const [view, setView] = useState<"grid" | "timeline">("grid");
   const [month, setMonth] = useState<string>("Semua");
@@ -59,8 +60,22 @@ export default function Gallery() {
     let out = photos;
     if (folder !== "Semua") out = out.filter((p) => p.folder === folder);
     if (month !== "Semua") out = out.filter((p) => inferMonthKey(p.folder) === month);
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      out = out.filter((p) => {
+        return (
+          p.id.toLowerCase().includes(q) ||
+          p.title.toLowerCase().includes(q) ||
+          p.filename.toLowerCase().includes(q) ||
+          p.folder.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
+        );
+      });
+    }
+
     return out;
-  }, [folder, month, photos]);
+  }, [folder, month, photos, query]);
 
   const months = useMemo(() => {
     const set = new Set<string>();
@@ -160,6 +175,17 @@ export default function Gallery() {
             <div className="grid gap-4 sm:grid-cols-[320px_1fr]">
               <aside className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="text-sm font-semibold text-[var(--text)]">Folder</div>
+                <div className="mt-3">
+                  <input
+                    value={query}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setPage(1);
+                    }}
+                    placeholder="Cari (contoh: peyukan, IMG_2515, foodies)"
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                  />
+                </div>
                 <div className="mt-3 max-h-[70vh] space-y-2 overflow-auto pr-1">
                   <button
                     type="button"
