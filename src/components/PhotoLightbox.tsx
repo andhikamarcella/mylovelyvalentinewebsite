@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Photo } from "@/utils/photos";
+import { localUrlForFilename, type Photo } from "@/utils/photos";
 
 export default function PhotoLightbox({
   photos,
@@ -15,6 +15,8 @@ export default function PhotoLightbox({
 }) {
   const p = photos[index];
   if (!p) return null;
+
+  const fallback = localUrlForFilename(p.filename);
 
   const prev = () => onIndex((index - 1 + photos.length) % photos.length);
   const next = () => onIndex((index + 1) % photos.length);
@@ -46,7 +48,17 @@ export default function PhotoLightbox({
               className="max-h-[72vh] w-full bg-black/30 object-contain"
             />
           ) : (
-            <img src={encodeURI(p.url)} alt="" className="max-h-[72vh] w-full object-contain" />
+            <img
+              src={encodeURI(p.url)}
+              data-fallback={fallback ? encodeURI(fallback) : undefined}
+              onError={(e) => {
+                const img = e.currentTarget;
+                const next = img.dataset.fallback;
+                if (next && img.src !== next) img.src = next;
+              }}
+              alt=""
+              className="max-h-[72vh] w-full object-contain"
+            />
           )}
 
           <button

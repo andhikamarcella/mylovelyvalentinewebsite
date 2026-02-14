@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import StarsBackdrop from "@/components/StarsBackdrop";
 import TopNav from "@/components/TopNav";
 import { cn } from "@/lib/utils";
-import { fetchPhotos, type Photo } from "@/utils/photos";
+import { fetchPhotos, localUrlForFilename, type Photo } from "@/utils/photos";
 
 const SECRET_KEY = "valentine_secret_authed";
 const SECRET_REMEMBER = "valentine_secret_remember";
@@ -31,6 +31,12 @@ export default function Secret() {
   const authed = useMemo(() => localStorage.getItem(SECRET_KEY) === "1", []);
   const [unlocked, setUnlocked] = useState(authed);
   const [surprise, setSurprise] = useState<Photo[]>([]);
+
+  const onImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const next = img.dataset.fallback;
+    if (next && img.src !== next) img.src = next;
+  };
 
   useEffect(() => {
     if (!unlocked) return;
@@ -151,6 +157,11 @@ export default function Secret() {
                         <img
                           key={p.id}
                           src={encodeURI(p.url)}
+                          data-fallback={(() => {
+                            const fallback = localUrlForFilename(p.filename);
+                            return fallback ? encodeURI(fallback) : undefined;
+                          })()}
+                          onError={onImageError}
                           alt=""
                           className="aspect-square w-full rounded-xl border border-white/10 object-cover"
                           loading="lazy"

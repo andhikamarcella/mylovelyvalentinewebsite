@@ -5,7 +5,7 @@ import PhotoLightbox from "@/components/PhotoLightbox";
 import StarsBackdrop from "@/components/StarsBackdrop";
 import TopNav from "@/components/TopNav";
 import { cn } from "@/lib/utils";
-import { fetchPhotos, type Photo } from "@/utils/photos";
+import { fetchPhotos, localUrlForFilename, type Photo } from "@/utils/photos";
 
 export default function Gallery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -133,6 +133,12 @@ export default function Gallery() {
     return map;
   }, [photos]);
 
+  const onImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const next = img.dataset.fallback;
+    if (next && img.src !== next) img.src = next;
+  };
+
   return (
     <div className="min-h-[100svh] bg-[color:var(--bg)] text-[var(--text)]">
       <TopNav />
@@ -252,6 +258,11 @@ export default function Gallery() {
                           <div className="aspect-[4/3] overflow-hidden">
                             <img
                               src={encodeURI(p.url)}
+                              data-fallback={(() => {
+                                const fallback = localUrlForFilename(p.filename);
+                                return fallback ? encodeURI(fallback) : undefined;
+                              })()}
+                              onError={onImageError}
                               alt=""
                               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
                               loading="lazy"
@@ -359,6 +370,11 @@ export default function Gallery() {
                               ) : (
                                 <img
                                   src={encodeURI(p.url)}
+                                  data-fallback={(() => {
+                                    const fallback = localUrlForFilename(p.filename);
+                                    return fallback ? encodeURI(fallback) : undefined;
+                                  })()}
+                                  onError={onImageError}
                                   alt=""
                                   className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
                                   loading="lazy"
@@ -435,6 +451,11 @@ export default function Gallery() {
                                 ) : (
                                   <img
                                     src={encodeURI(p.url)}
+                                    data-fallback={(() => {
+                                      const fallback = localUrlForFilename(p.filename);
+                                      return fallback ? encodeURI(fallback) : undefined;
+                                    })()}
+                                    onError={onImageError}
                                     alt=""
                                     className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
                                     loading="lazy"

@@ -9,6 +9,12 @@ export type Photo = {
   createdAt?: string;
 };
 
+const LOCAL_MODULES = import.meta.glob("/gallery/**/*.{jpg,jpeg,JPEG,JPG,png,PNG,mp4,MP4}", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
 const SPECIAL_DESCRIPTIONS: Record<string, string> = {
   "peyukan.jpg":
     "omagad ini first time sekali aku memeluk kesayanganku yang paling ku sayangi paling kucintai paling kubanggakan aku merasa senang banget bisa bertemu dengan kamu aku pengen sekali berpeyukkan sama kamu pengen senantiasa aku memeyuk kamu lagi...",
@@ -87,6 +93,31 @@ function stripExtension(filename: string) {
   return idx > 0 ? filename.slice(0, idx) : filename;
 }
 
+function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+const LOCAL_URL_BY_FILENAME = (() => {
+  const map: Record<string, string> = {};
+  Object.entries(LOCAL_MODULES).forEach(([path, url]) => {
+    const filename = safeDecode(path.split("/").pop() ?? "");
+    if (!filename) return;
+    const lower = filename.toLowerCase();
+    map[lower] ??= url;
+    map[stripExtension(lower)] ??= url;
+  });
+  return map;
+})();
+
+export function localUrlForFilename(filename: string) {
+  const key = String(filename || "").toLowerCase();
+  return LOCAL_URL_BY_FILENAME[key] ?? LOCAL_URL_BY_FILENAME[stripExtension(key)];
+}
+
 function defaultCaption(filename: string) {
   const name = stripExtension(filename);
   return name;
@@ -125,13 +156,7 @@ export async function fetchPhotos() {
 }
 
 async function fetchFromLocal() {
-  const modules = import.meta.glob("/gallery/**/*.{jpg,jpeg,JPEG,JPG,png,PNG,mp4,MP4}", {
-    eager: true,
-    query: "?url",
-    import: "default",
-  }) as Record<string, string>;
-
-  const entries = Object.entries(modules);
+  const entries = Object.entries(LOCAL_MODULES);
 
   return entries
     .map(([path, url]) => toPhotoFromLocal(path, url))
